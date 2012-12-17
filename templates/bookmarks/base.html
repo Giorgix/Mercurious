@@ -1,0 +1,79 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <head>
+    <title>Django Bookmarks | {% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="/site_media/css/style.css" type="text/css" />
+  </head>
+  <body>
+  	<div id="nav">
+	<a href="/">home</a> |
+	<a href="/bookmarks/search/">search</a> |
+	<!--<p id="greeting"></p>-->
+	{% if user.is_authenticated %}
+		
+		welcome {{ user.username }}
+		<a href="/bookmarks/logout">logout</a> |
+	 	<a href="/bookmarks/account/change_password/">change your password</a> |
+	 	
+	 	<a href="/bookmarks/save/">submit</a> |
+		<a href="/bookmarks/user/{{ user.username }}/">{{ user.username }}</a> |
+		 	
+	{% else %}
+	
+		<a href="/bookmarks/login/">login</a> |
+		<a href="/bookmarks/register/">register</a> |
+		
+	{% endif %}
+	</div>
+    <h1>{% block head %}{% endblock %}</h1>
+    {% block content %}{% endblock %}
+    <!-- Dojo config -->       
+    <script type="text/javascript/">
+    	
+    	var dojoConfig = {
+    		baseUrl: "/site_media/js/",
+    		tlmSiblingOfDojo: false,
+    		async:            true,
+    		parseOnLOad:      true,
+    		isDebug:          true,
+    		packages: [
+        		{ name: "dojo",      location: "lib/dojo"  },
+        		{ name: "dijit",     location: "lib/dijit" },
+        		{ name: "dojox",     location: "lib/dojox" },
+        		{ name: "search",    location: "lib/bookmarks" }
+    		]
+		};
+		
+    </script>   
+    <!-- load Dojo -->
+    <script type="text/javascript" src="/site_media/js/lib/dojo/dojo.js"></script>
+    {% block external %}{% endblock %} 
+    <!-- Hello Dojo sample.
+    <script type="text/javascript">
+    	require(["dojo/dom", "dojo/domReady!"], function(dom){
+    	var greeting = dom.byId("greeting");
+    	greeting.innerHTML += " from Dojo!";
+	});	
+    </script>
+    -->
+    <!-- Hello Dojo sample with FX.
+	<script type="text/javascript">
+		require(["dojo/dom", "dojo/fx", "dojo/domReady!"], function(dom, fx){
+    		// The piece we had before...
+    		var greeting = dom.byId("greeting");
+    		greeting.innerHTML += " from Dojo!";
+ 
+    		// ...but now, with an animation!
+    		fx.slideTo({
+        		top: 100,
+        		left: 200,
+        		node: greeting
+    		}).play();
+		});
+	</script>
+    -->
+  </body>
+</html>
+
+

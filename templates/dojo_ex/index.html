@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Tutorial: Hello Dojo!</title>
+</head>
+<body class="claro">
+    <h1>Demo: dojo/request/script</h1>
+		<p>Click the button below to see dojo/request/script request recent tweets from twitter tagged with #dojo.</p>
+		<div>
+			<button class="action" id="tweetButton">#dojo tweets</button>
+		</div>
+		<br />
+		<div>
+			<button class="action" id="textButton">Cargar texto</button>
+		</div>
+		<br /><br />
+		<ul id="tweetsNode">
+		</ul>
+		<br /><br />
+		<div id="resultDiv">
+		</div>
+		
+		<div id="buttonContainer">
+    		<p>Click the buttons to see dojo/request/notify run.  Success will run a successful request sequence, Fail will handle an error from the server.</p>
+    		<p>The demo includes short delays to make it easier to see the activity.</p>
+    		<button class="action" id="successBtn">Succeed</button>
+    		<button class="action" id="failBtn">Fail</button>
+    	</div>
+
+    	<h2>Status</h2>
+    	<div id="divStatus">
+    		<p class="ready">Ready</p>
+    	</div>
+    	
+    	<p>Click the button below to see dojo/request/registry search for content on both the local server and on twitter.</p>
+		<p>twitter is searched for results tagged with the search text.  The local results include some common web terms such as <em>dojo, php</em> and <em>javascript</em>.</p>
+		<div>
+			<label>Search: <input type="text" id="searchText" /></label>
+			<button class="action" id="searchButton">Go</button>
+		</div>
+		<br /><br />
+		<h2>twitter Results</h2>
+		<div id="twitterDiv">
+		</div>
+		<h2>Local Results</h2>
+		<div id="localResourceDiv">
+		</div>
+	
+	  <!-- Dojo config -->       
+    <script type="text/javascript/">
+    	
+    	var dojoConfig = {
+    		baseUrl: "/site_media/js/",
+    		tlmSiblingOfDojo: false,
+    		async:            true,
+    		parseOnLOad:      true,
+    		isDebug:          true,
+    		packages: [
+        		{ name: "dojo",      location: "lib/dojo"  },
+        		{ name: "dijit",     location: "lib/dijit" },
+        		{ name: "dojox",     location: "lib/dojox" },
+    		]
+		};
+		
+    </script> 
+    
+    <!-- load Dojo -->
+    <script type="text/javascript" src="/site_media/js/lib/dojo/dojo.js"></script>
+    	
+    	
+    <!--Display the contents of a text file on a page-->
+    <script type="text/javascript">          
+    
+	require(["dojo/dom", "dojo/on", "dojo/request", "dojo/domReady!"],
+    function(dom, on, request){
+        // Results will be displayed in resultDiv
+        var resultDiv = dom.byId("resultDiv");
+ 
+        // Attach the onclick event handler to the textButton
+        on(dom.byId("textButton"), "click", function(evt){
+            // Request the text file
+            request.get("/site_media/txt/helloworld.txt").then(
+                function(response){
+                    // Display the text file content../../site_media/js/lib/
+                    resultDiv.innerHTML = "<pre>"+response+"</pre>";
+                },
+                function(error){
+                    // Display the error returned
+                    resultDiv.innerHTML = "<div class=\"error\">"+error+"<div>";
+                }
+            );
+        });
+    }
+);          
+    </script>
+
+<!-- Using JSONP to request #dojo tweets from twitter -->
+<script type="text/javascript">
+	
+	require(["dojo/dom", "dojo/on", "dojo/request/script",
+        "dojo/dom-construct", "dojo/_base/array",
+        "dojo/domReady!"],
+    function(dom, on, script, domConstruct, arrayUtil){
+        var tweetsNode = dom.byId("tweetsNode");
+ 
+        // Attach the onclick event handler to tweetButton
+        on(dom.byId("tweetButton"), "click", function(evt){
+            // Request the tweets with #dojo tags from twitter.com
+            script.get("http://search.twitter.com/search.json", {
+                // Use the "callback" query parameter to tell
+                // Twitter's services the name of the function
+                // to wrap the data in
+                jsonp: "callback",
+                // Send some additional query parameters with
+                // the request
+                query: {
+                    q:"#dojo",
+                    lang:"en"
+                }
+            }).then(function(data){
+                // Empty the tweets node
+                domConstruct.empty(tweetsNode);
+ 
+                // Create a document fragment to keep from
+                // doing live DOM manipulation
+                var fragment = document.createDocumentFragment();
+ 
+                // Loop through each tweet and create a list item
+                // for it
+                arrayUtil.forEach(data.results, function(tweet){
+                    domConstruct.create("li", {
+                        innerHTML: tweet.text
+                    }, fragment);
+                });
+ 
+                // Append the document fragment to the list
+                domConstruct.place(fragment, tweetsNode);
+            });
+        });
+    }
+);
+	
+</script>
+<!-- Using dojo/request/notify to monitor the progress of requests -->
+<script type="text/javascript">
+	require(["dojo/dom", "dojo/request", "dojo/request/notify",
+        "dojo/on", "dojo/dom-construct", "dojo/query",
+        "dojo/domReady!"],
+    function(dom, request, notify, on, domConstruct){
+        // Listen for events from request providers
+        notify("start", function(){
+            domConstruct.place("<p>Start</p>","divStatus");
+        });
+        notify("send", function(data, cancel){
+            domConstruct.place("<p>Sent request</p>","divStatus");
+        });
+        notify("load", function(data){
+            domConstruct.place("<p>Load (response received)</p>","divStatus");
+        });
+        notify("error", function(error){
+            domConstruct.place("<p class=\"error\">Error</p>","divStatus");
+        });
+        notify("done", function(data){
+            domConstruct.place("<p>Done (response processed)</p>","divStatus");
+            if(data instanceof Error){
+                domConstruct.place("<p class=\"error\">Error</p>","divStatus");
+            }else{
+                domConstruct.place("<p class=\"success\">Success</p>","divStatus");
+            }
+        });
+        notify("stop", function(){
+            domConstruct.place("<p>Stop</p>","divStatus");
+            domConstruct.place("<p class=\"ready\">Ready</p>", "divStatus");
+        });
+ 
+        // Use event delegation to only listen for clicks that
+        // come from nodes with a class of "action"
+        on(dom.byId("buttonContainer"), ".action:click", function(evt){
+            domConstruct.empty("divStatus");
+            request.get("/dojo_ex/", {
+                query: {
+                    success: this.id === "successBtn"
+                },
+                handleAs: "json"
+            });
+        });
+    }
+);
+</script>
+
+
+<!-- Using dojo/request/registry to assign the provider based on the URL of requests -->
+<script type="text/javascript">
+require(["dojo/request/registry", "dojo/request/script", "dojo/dom",
+        "dojo/dom-construct", "dojo/on", "dojo/domReady!"],
+    function(request, script, dom, domConstuct, on){
+        // Registers anything that starts with "http://"
+        // to be sent to the script provider,
+        // requests for a local search will use xhr
+        request.register(/^https?:\/\//i, script);
+ 
+        // When the search button is clicked
+        on(dom.byId("searchButton"), "click", function(){
+            // First send a request to twitter for all tweets
+            // tagged with the search string
+            request("http://search.twitter.com/search.json", {
+                query: {
+                    q:"#" + dom.byId("searchText").value,
+                    result_type:"mixed",
+                    lang:"en"
+                },
+                jsonp: "callback"
+            }).then(function(data){
+                // If the tweets node exists, destroy it
+                if (dom.byId("tweets")){
+                    domConstuct.destroy("tweets");
+                }
+                // If at least one result was returned
+                if (data.results.length > 0) {
+                    // Create a new tweet list
+                    domConstuct.create("ul", {id: "tweets"},"twitterDiv");
+                    // Add each tweet as an li
+                    while (data.results.length>0){
+                        domConstuct.create("li", {innerHTML: data.results.shift().text},"tweets");
+                    }
+                }else{
+                    // No results returned
+                    domConstuct.create("p", {id:"tweets",innerHTML:"None"},"twitterDiv");
+                }
+            });
+            // Next send a request to the local search
+            request("/bookmarks/search/", {
+                query: {
+                    q: dom.byId("searchText").value
+                },
+                handleAs: "json"
+            }).then(
+                function(data){
+                    dom.byId('localResourceDiv').innerHTML =
+                        "<p><strong>" + data.name + "</strong><br />" +
+                        "<a href=\"" + data.url + "\">" + data.url + "</a><br />";
+                },
+                function(error){
+                    // If no results are found, the local search returns a 404
+                    dom.byId('localResourceDiv').innerHTML = "<p>None</p>";
+                }
+            );
+        });
+    }
+);
+</script>
+
+</body>
+</html>
