@@ -1,0 +1,19 @@
+{% extends "bookmarks/base.html" %}
+{% block title %} Search Bookmarks {% endblock %}
+{% block head %}  Search Bookmarks {% endblock %}
+{% block content %}
+	<form id="search-form" method="get" action=".">
+		{% csrf_token %}
+		{{ form.as_p }}
+		<input type="submit" value="search" id="search-button" />
+	</form>
+	<div id="search-results">
+		{% if show_results %}
+		{% include 'bookmarks/bookmark_list.html' %}
+		{% endif %}
+	</div>
+{% endblock %}
+{% block external %}
+<script type="text/javascript" src="/site_media/js/lib/bookmarks/bookmark_search.js"></script>
+{% endblock %}
+
